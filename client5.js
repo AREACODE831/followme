@@ -1,4 +1,4 @@
-// Art 109 Three.js Demo Site
+//primary: Professor Chelsea Tompto
 // client5.js
 // A three.js scene that combines the
 // glTF loader example (client2.js)
@@ -148,7 +148,7 @@ function createScene( ) {
   // TEXT
 
   const loader = new FontLoader();
-  loader.load( './assets/helvetiker_bold.typeface.json', function ( font ) {
+  loader.load( "./assets/gentilis_bold.typeface.json", function ( font ) {
 
     const textGeo = new TextGeometry( "Trends", {
 
@@ -167,7 +167,7 @@ function createScene( ) {
     textGeo.computeBoundingBox();
     const centerOffset = - 0.5 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
 
-    const textMaterial = new THREE.MeshPhongMaterial( { color: 0x62D9A1, specular: 0xffffff } );
+    const textMaterial = new THREE.MeshPhongMaterial( { color: 0xF29F05, specular: 0xffffff } );
 
     const mesh = new THREE.Mesh( textGeo, textMaterial );
     mesh.position.x = centerOffset;
