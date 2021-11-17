@@ -9,115 +9,314 @@
 import * as THREE from "./build/three.module.js";
 
 // Import add-on for GLTF models
-import { GLTFLoader } from "./src/GLTFLoader.js";
-// Note that we are using the TrackballControls so the
-// OrbitControls from client2.js are not loaded.
+import Stats from './src/stats.module.js';
 
-// Import AsciiEffect and TrackballControls
-import { AsciiEffect } from './src/AsciiEffect.js';
-import { TrackballControls } from './src/TrackballControls.js';
+import { FirstPersonControls } from './src/FirstPersonControls.js';
+import { GLTFLoader } from './src/GLTFLoader.js';
+import { FontLoader } from './src/FontLoader.js';
+import { TextGeometry } from './src/TextGeometry.js';
 
-// Declaring variables for the scene
-let camera, controls, container, scene, renderer, effect, mesh;
+const SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
 
-const start = Date.now();
+let SCREEN_WIDTH = window.innerWidth;
+let SCREEN_HEIGHT = window.innerHeight;
+const FLOOR = - 250;
 
-// Call the init and animate functions (client4.js style)
+const ANIMATION_GROUPS = 25;
+
+let camera, controls, scene, renderer;
+let stats;
+
+const NEAR = 5, FAR = 3000;
+
+let morph, mixer;
+
+const morphs = [], animGroups = [];
+
+const clock = new THREE.Clock();
+
 init();
 animate();
 
-// Define the init function which contains the bulk of the scene
+
 function init() {
 
-  //Identify div in HTML to place scene
-  container = document.getElementById("space2");
+  const container = document.createElement( 'div' );
+  document.body.appendChild( container );
 
-  //Create scene
+  // CAMERA
+
+  camera = new THREE.PerspectiveCamera( 23, SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR );
+  camera.position.set( 700, 50, 1900 );
+
+  // SCENE
+
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(
-    50,
-    500 / 500,
-    0.1,
-    1000
-  );
+  scene.background = new THREE.Color( 0xF285CC );
+  scene.fog = new THREE.Fog( 0x62D9A1, 1000, FAR );
+
+  // LIGHTS
+
+  const ambient = new THREE.AmbientLight( 0x444444 );  //pink rn
+  scene.add( ambient );
+
+  const light = new THREE.SpotLight( 0xffffff, 1, 0, Math.PI / 5, 0.3 );
+  light.position.set( 0, 1500, 1000 );
+  light.target.position.set( 0, 0, 0 );
+
+  light.castShadow = true;
+  light.shadow.camera.near = 1200;
+  light.shadow.camera.far = 2500;
+  light.shadow.bias = 0.0001;
+
+  light.shadow.mapSize.width = SHADOW_MAP_WIDTH;
+  light.shadow.mapSize.height = SHADOW_MAP_HEIGHT;
+
+  scene.add( light );
+
+  createScene();
+
+  // RENDERER
+
   renderer = new THREE.WebGLRenderer();
-  renderer.setClearColor(0xdfdfdf);
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(500, 500);
+  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+  container.appendChild( renderer.domElement );
 
-  // Material to be added to model
-  var newMaterial = new THREE.MeshStandardMaterial({
-    color: 0x2E5939
-  });
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.autoClear = false;
 
-  // Load GLTF model, add material, and add it to the scene
-  const loader = new GLTFLoader().load(
-    "./assets/catani.glb",
-    function(gltf) {
-      // Scan loaded model for mesh and apply defined material if mesh is present
-      gltf.scene.traverse(function(child) {
-        if (child.isMesh) {
-          child.material = newMaterial;
-        }
-      });
-      // set position and scale
-      mesh = gltf.scene;
-      mesh.position.set(0, 0, 0);
-      mesh.rotation.set(0.349066, 0, 0); // <-- changed to better display texture
-      mesh.scale.set(.2, .2, .2);
-      // Add model to scene
-      scene.add(mesh);
-    },
-    undefined,
-    function(error) {
-      console.error(error);
-    }
-  );
+  //
 
-  // Position our camera so we can see the shape
-  camera.position.z = 4.5;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  // Add a directional light to the scene
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
-  scene.add(directionalLight);
+  // CONTROLS
 
-  // Add an ambient light to the scene
-  const ambientLight = new THREE.AmbientLight(0xffffff, .97);
-  scene.add(ambientLight);
+  controls = new FirstPersonControls( camera, renderer.domElement );
 
-  // Add AsciiEffect
-  effect = new AsciiEffect(renderer, ' -~=#', {
-    invert: true
-  });
-  effect.setSize(500, 500);
-  effect.domElement.style.color = '#6E2E99';
-  effect.domElement.style.backgroundColor = '#2E9939';
+  controls.lookSpeed = 0.0125;
+  controls.movementSpeed = 500;
+  controls.noFly = false;
+  controls.lookVertical = true;
 
-  // Add scene to gltf.html
-  container.appendChild(effect.domElement);
+  controls.lookAt( scene.position );
 
-  // Add controls
-  controls = new TrackballControls(camera, effect.domElement);
+  // STATS
+
+  stats = new Stats();
+  container.appendChild( stats.dom );
+
+  //
+
+  window.addEventListener( 'resize', onWindowResize );
 
 }
 
-// Define animate function
+function onWindowResize() {
+
+  SCREEN_WIDTH = window.innerWidth;
+  SCREEN_HEIGHT = window.innerHeight;
+
+  camera.aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+
+  controls.handleResize();
+
+}
+
+function createScene( ) {
+
+  // GROUND
+
+  const geometry = new THREE.PlaneGeometry( 100, 100 );
+  const planeMaterial = new THREE.MeshPhongMaterial( { color: 0xffb851 } );
+
+  const ground = new THREE.Mesh( geometry, planeMaterial );
+
+  ground.position.set( 0, FLOOR, 0 );
+  ground.rotation.x = - Math.PI / 2;
+  ground.scale.set( 100, 100, 100 );
+
+  ground.castShadow = false;
+  ground.receiveShadow = true;
+
+  scene.add( ground );
+
+  // TEXT
+
+  const loader = new FontLoader();
+  loader.load( './assets/helvetiker_bold.typeface.json', function ( font ) {
+
+    const textGeo = new TextGeometry( "Trends", {
+
+      font: font,
+
+      size: 200,
+      height: 50,
+      curveSegments: 12,
+
+      bevelThickness: 2,
+      bevelSize: 5,
+      bevelEnabled: true
+
+    } );
+
+    textGeo.computeBoundingBox();
+    const centerOffset = - 0.5 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
+
+    const textMaterial = new THREE.MeshPhongMaterial( { color: 0x62D9A1, specular: 0xffffff } );
+
+    const mesh = new THREE.Mesh( textGeo, textMaterial );
+    mesh.position.x = centerOffset;
+    mesh.position.y = FLOOR + 67;
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    scene.add( mesh );
+
+  } );
+
+  // CUBES
+
+  const cubes1 = new THREE.Mesh( new THREE.BoxGeometry( 1500, 220, 150 ), planeMaterial );
+
+  cubes1.position.y = FLOOR - 50;
+  cubes1.position.z = 20;
+
+  cubes1.castShadow = true;
+  cubes1.receiveShadow = true;
+
+  scene.add( cubes1 );
+
+  const cubes2 = new THREE.Mesh( new THREE.BoxGeometry( 1600, 170, 250 ), planeMaterial );
+
+  cubes2.position.y = FLOOR - 50;
+  cubes2.position.z = 20;
+
+  cubes2.castShadow = true;
+  cubes2.receiveShadow = true;
+
+  scene.add( cubes2 );
+
+  mixer = new THREE.AnimationMixer( scene );
+
+  for ( let i = 0; i !== ANIMATION_GROUPS; ++ i ) {
+
+    const group = new THREE.AnimationObjectGroup();
+    animGroups.push( group );
+
+  }
+
+  // MORPHS
+
+  function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization ) {
+
+    mesh = mesh.clone();
+    mesh.material = mesh.material.clone();
+
+    if ( fudgeColor ) {
+
+      mesh.material.color.offsetHSL( 0, Math.random() * 0.5 - 0.25, Math.random() * 0.5 - 0.25 );
+
+    }
+
+    mesh.speed = speed;
+
+    if ( massOptimization ) {
+
+      const index = Math.floor( Math.random() * ANIMATION_GROUPS ),
+        animGroup = animGroups[ index ];
+
+      animGroup.add( mesh );
+
+      if ( ! mixer.existingAction( clip, animGroup ) ) {
+
+        const randomness = 0.6 * Math.random() - 0.3;
+        const phase = ( index + randomness ) / ANIMATION_GROUPS;
+
+        mixer.clipAction( clip, animGroup ).
+          setDuration( duration ).
+          startAt( - duration * phase ).
+          play();
+
+      }
+
+    } else {
+
+      mixer.clipAction( clip, mesh ).
+        setDuration( duration ).
+        startAt( - duration * Math.random() ).
+        play();
+
+    }
+
+    mesh.position.set( x, y, z );
+    mesh.rotation.y = Math.PI / 2;
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    scene.add( mesh );
+
+    morphs.push( mesh );
+
+  }
+
+  const gltfLoader = new GLTFLoader();
+  gltfLoader.load( "assets/Horse.glb", function ( gltf ) {
+
+    const mesh = gltf.scene.children[ 0 ];
+    const clip = gltf.animations[ 0 ];
+
+    for ( let i = - 600; i < 601; i += 2 ) {
+
+      addMorph( mesh, clip, 550, 1, 100 - Math.random() * 3000, FLOOR, i, true, true );
+
+    }
+
+  } );
+
+}
+
+//
+
 function animate() {
 
-  requestAnimationFrame(animate);
+  requestAnimationFrame( animate );
 
+  stats.begin();
   render();
+  stats.end();
 
 }
 
-
-// Define the render loop
 function render() {
 
-  // Add rotation animation
-  const timer = Date.now() - start;
-  mesh.rotation.y = timer * 0.0003;
+  const delta = clock.getDelta();
 
-  controls.update();
-  effect.render(scene, camera);
+  if ( mixer ) mixer.update( delta );
+
+  for ( let i = 0; i < morphs.length; i ++ ) {
+
+    morph = morphs[ i ];
+
+    morph.position.x += morph.speed * delta;
+
+    if ( morph.position.x > 2000 ) {
+
+      morph.position.x = - 1000 - Math.random() * 500;
+
+    }
+
+  }
+
+  controls.update( delta );
+
+  renderer.clear();
+  renderer.render( scene, camera );
+
 }
