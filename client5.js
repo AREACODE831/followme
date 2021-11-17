@@ -6,15 +6,15 @@
 
 // Import required source code
 // Import three.js core
-import * as THREE from "./build/three.module.js";
+import * as THREE from "C:\Users\shuro\Documents\GitHub\followme\client5.js";
 
 // Import add-on for GLTF models
-import Stats from './src/stats.module.js';
+import Stats from "./src/stats.module.js";
 
-import { FirstPersonControls } from './src/FirstPersonControls.js';
-import { GLTFLoader } from './src/GLTFLoader.js';
-import { FontLoader } from './src/FontLoader.js';
-import { TextGeometry } from './src/TextGeometry.js';
+import { FirstPersonControls } from "./src/FirstPersonControls.js";
+import { GLTFLoader } from "./src/GLTFLoader.js";
+import { FontLoader } from "./src/FontLoader.js";
+import { TextGeometry } from "./src/TextGeometry.js";
 
 const SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
 
