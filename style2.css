@@ -12,16 +12,19 @@ body {
 
 h1 {
   font-style: bold;
-  color: #635EF2;
+  color: #62D9A1;
   text-align: center;
   padding-top: 200px;
   padding-bottom: 50px;
+  font-size:100px;
 }
 
 h2 {
-  color: #F2E205;
+  color: #F288C2;
   text-align: center;
   padding-bottom: 20px;
+font-family: 'Secular One', sans-serif;
+font-size:8px;
 }
 
 p {
@@ -31,13 +34,16 @@ p {
   padding-left: 25%;
   padding-bottom: 20px;
   line-height: 150%;
+
 }
 
 p.move-mid {
   padding-left: 0%;
   text-align: center;
   margin: auto;
-  color: #6E2E99;
+  color: #F29F05;
+  font-family: 'Secular One', sans-serif;
+
 }
 
 a {

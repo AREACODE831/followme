@@ -16,6 +16,8 @@ import { GLTFLoader } from "./src/GLTFLoader.js";
 import { FontLoader } from "./src/FontLoader.js";
 import { TextGeometry } from "./src/TextGeometry.js";
 
+
+
 const SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
 
 let SCREEN_WIDTH = window.innerWidth;
@@ -24,7 +26,7 @@ const FLOOR = - 250;
 
 const ANIMATION_GROUPS = 25;
 
-let camera, controls, scene, renderer;
+let camera, controls, scene, mesh2, renderer;
 let stats;
 
 const NEAR = 5, FAR = 3000;
@@ -145,16 +147,35 @@ function createScene( ) {
 
   scene.add( ground );
 
+
+  const gltfloader = new GLTFLoader();
+
+  				gltfloader.load( "../assets/running2.glb", function ( gltf ) {
+
+  					const mesh = gltf.scene.children[ 0 ];
+  					const clip = gltf.animations[ 0 ];
+
+  					addMorph( mesh, clip, 550, 1, 100 - Math.random() * 1000, FLOOR, 300, true );
+  					addMorph( mesh, clip, 550, 1, 100 - Math.random() * 1000, FLOOR, 450, true );
+  					addMorph( mesh, clip, 550, 1, 100 - Math.random() * 1000, FLOOR, 600, true );
+
+  					addMorph( mesh, clip, 550, 1, 100 - Math.random() * 1000, FLOOR, - 300, true );
+  					addMorph( mesh, clip, 550, 1, 100 - Math.random() * 1000, FLOOR, - 450, true );
+  					addMorph( mesh, clip, 550, 1, 100 - Math.random() * 1000, FLOOR, - 600, true );
+
+  				} );
+
+
   // TEXT
 
   const loader = new FontLoader();
   loader.load( "./assets/gentilis_bold.typeface.json", function ( font ) {
 
-    const textGeo = new TextGeometry( "Trends", {
+    const textGeo = new TextGeometry( "TRENDS", {
 
       font: font,
 
-      size: 200,
+      size: 400,
       height: 50,
       curveSegments: 12,
 
@@ -170,8 +191,11 @@ function createScene( ) {
     const textMaterial = new THREE.MeshPhongMaterial( { color: 0xF29F05, specular: 0xffffff } );
 
     const mesh = new THREE.Mesh( textGeo, textMaterial );
-    mesh.position.x = centerOffset;
-    mesh.position.y = FLOOR + 67;
+    // mesh.position.x = centerOffset;
+    // mesh.position.y = FLOOR + 67;
+    mesh.position.x = 120;
+    mesh.position.y = FLOOR + 80;
+    mesh.position.z = -400;
 
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -202,6 +226,10 @@ function createScene( ) {
 
   scene.add( cubes2 );
 
+
+
+
+
   mixer = new THREE.AnimationMixer( scene );
 
   for ( let i = 0; i !== ANIMATION_GROUPS; ++ i ) {
@@ -216,13 +244,13 @@ function createScene( ) {
   function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization ) {
 
     mesh = mesh.clone();
-    mesh.material = mesh.material.clone();
+    // mesh.material = mesh.material.clone();
 
-    if ( fudgeColor ) {
-
-      mesh.material.color.offsetHSL( 0, Math.random() * 0.5 - 0.25, Math.random() * 0.5 - 0.25 );
-
-    }
+    // if ( fudgeColor ) {
+    //
+    //   mesh.material.color.offsetHSL( 0, Math.random() * 0.5 - 0.25, Math.random() * 0.5 - 0.25 );
+    //
+    // }
 
     mesh.speed = speed;
 
@@ -256,6 +284,7 @@ function createScene( ) {
 
     mesh.position.set( x, y, z );
     mesh.rotation.y = Math.PI / 2;
+    mesh.scale.set(1, 1, 1);
 
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -267,7 +296,7 @@ function createScene( ) {
   }
 
   const gltfLoader = new GLTFLoader();
-  gltfLoader.load( "assets/Horse.glb", function ( gltf ) {
+  gltfLoader.load( "assets/running.glb", function ( gltf ) {
 
     const mesh = gltf.scene.children[ 0 ];
     const clip = gltf.animations[ 0 ];
@@ -281,6 +310,35 @@ function createScene( ) {
   } );
 
 }
+
+var newMaterial2 = new THREE.MeshStandardMaterial({
+  color: 0x6E2E99
+});
+
+
+const loader2 = new GLTFLoader().load(
+  "./assets/ground.glb",
+  function(gltf) {
+    // Scan loaded model for mesh and apply defined material if mesh is present
+    gltf.scene.traverse(function(child) {
+      // if (child.isMesh) {
+      //   child.material = newMaterial2;
+      // }
+    });
+    // set position and scale
+    mesh2 = gltf.scene;
+    mesh2.position.set(0, -290, 0);
+    mesh2.rotation.set(0, 0, 0);
+    mesh2.scale.set(30, 50, 30);
+    // Add model to scene
+    scene.add(mesh2);
+
+  },
+  undefined,
+  function(error) {
+    console.error(error);
+  }
+);
 
 //
 

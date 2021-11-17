@@ -107,9 +107,9 @@ function init() {
       });
       // set position and scale
       mesh2 = gltf.scene;
-      mesh2.position.set(-4, 0, 0);
+      mesh2.position.set(0, 0, 0);
       mesh2.rotation.set(0, 0, 0);
-      mesh2.scale.set(1, 1, 1);
+      mesh2.scale.set(100, 100, 100);
       // Add model to scene
       scene.add(mesh2);
 

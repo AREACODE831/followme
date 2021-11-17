@@ -77,11 +77,11 @@
 
 			const loader = new GLTFLoader();
 			loader.setDRACOLoader( dracoLoader );
-			loader.load( './assets/catani.glb', function ( gltf ) {
+			loader.load( './assets/running.glb', function ( gltf ) {
 
 				const model = gltf.scene;
 				model.position.set( 1, 1, 0 );
-				model.scale.set( 0.5, 0.5, 0.5 );
+				model.scale.set( 10, 10, 10 );
 				scene.add( model );
 
 				mixer = new THREE.AnimationMixer( model );
