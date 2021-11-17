@@ -15,110 +15,88 @@ import { FontLoader } from "./src/FontLoader.js";
 import { TextGeometry } from "./src/TextGeometry.js";
 
 
-import { GUI } from './src/dat.gui.module.js';
+import { GUI } from "./src/dat.gui.module.js";
 
-import { MapControls } from './src/OrbitControls.js';
+import { MapControls } from "./src/OrbitControls.js";
 
-let camera, controls, scene, renderer;
-
-init();
-//render(); // remove when using next line for animation loop (requestAnimationFrame)
-animate();
-
-function init() {
-
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color( 0xcccccc );
-  scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
-
-  renderer = new THREE.WebGLRenderer( { antialias: true } );
-  renderer.setPixelRatio( window.devicePixelRatio );
-  renderer.setSize( window.innerWidth, window.innerHeight );
-  document.body.appendChild( renderer.domElement );
-
-  camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
-  camera.position.set( 400, 200, 0 );
-
-  // controls
-
-  controls = new MapControls( camera, renderer.domElement );
-
-  //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
-
-  controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-  controls.dampingFactor = 0.05;
-
-  controls.screenSpacePanning = false;
-
-  controls.minDistance = 100;
-  controls.maxDistance = 500;
-
-  controls.maxPolarAngle = Math.PI / 2;
-
-  // world
-
-  const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-  geometry.translate( 0, 0.5, 0 );
-  const material = new THREE.MeshPhongMaterial( { color: 0xffffff, flatShading: true } );
-
-  for ( let i = 0; i < 500; i ++ ) {
-
-    const mesh = new THREE.Mesh( geometry, material );
-    mesh.position.x = Math.random() * 1600 - 800;
-    mesh.position.y = 0;
-    mesh.position.z = Math.random() * 1600 - 800;
-    mesh.scale.x = 20;
-    mesh.scale.y = Math.random() * 80 + 10;
-    mesh.scale.z = 20;
-    mesh.updateMatrix();
-    mesh.matrixAutoUpdate = false;
-    scene.add( mesh );
-
-  }
-
-  // lights
-
-  const dirLight1 = new THREE.DirectionalLight( 0xffffff );
-  dirLight1.position.set( 1, 1, 1 );
-  scene.add( dirLight1 );
-
-  const dirLight2 = new THREE.DirectionalLight( 0x002288 );
-  dirLight2.position.set( - 1, - 1, - 1 );
-  scene.add( dirLight2 );
-
-  const ambientLight = new THREE.AmbientLight( 0x222222 );
-  scene.add( ambientLight );
-
-  //
-
-  window.addEventListener( 'resize', onWindowResize );
+import { DRACOLoader } from "./src/DRACOLoader.js";
 
 
-  const gui = new GUI();
-  gui.add( controls, 'screenSpacePanning' );
 
-}
+let mixer;
 
-function onWindowResize() {
+const clock = new THREE.Clock();
+const container = document.getElementById( 'container' );
+
+const stats = new Stats();
+container.appendChild( stats.dom );
+
+const renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setPixelRatio( window.devicePixelRatio );
+renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.outputEncoding = THREE.sRGBEncoding;
+container.appendChild( renderer.domElement );
+
+const pmremGenerator = new THREE.PMREMGenerator( renderer );
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color( 0xbfe3dd );
+scene.environment = pmremGenerator.fromScene( new RoomEnvironment(), 0.04 ).texture;
+
+const camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 100 );
+camera.position.set( 5, 2, 8 );
+
+const controls = new OrbitControls( camera, renderer.domElement );
+controls.target.set( 0, 0.5, 0 );
+controls.update();
+controls.enablePan = false;
+controls.enableDamping = true;
+
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath( 'src/' );
+
+const loader = new GLTFLoader();
+loader.setDRACOLoader( dracoLoader );
+loader.load( './assets/hiphop.glb', function ( gltf ) {
+
+  const model = gltf.scene;
+  model.position.set( 1, 1, 0 );
+  model.scale.set( 10, 10, 10 );
+  scene.add( model );
+
+  mixer = new THREE.AnimationMixer( model );
+  mixer.clipAction( gltf.animations[ 0 ] ).play();
+
+  animate();
+
+}, undefined, function ( e ) {
+
+  console.error( e );
+
+} );
+
+
+window.onresize = function () {
 
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 
   renderer.setSize( window.innerWidth, window.innerHeight );
 
-}
+};
+
 
 function animate() {
 
   requestAnimationFrame( animate );
 
-  controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+  const delta = clock.getDelta();
 
-  render();
+  mixer.update( delta );
 
-}
+  controls.update();
 
-function render() {
+  stats.update();
 
   renderer.render( scene, camera );
 

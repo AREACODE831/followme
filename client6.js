@@ -63,7 +63,7 @@ function init() {
 
   // Load preanimated model, add material, and add it to the scene
   const loader = new GLTFLoader().load(
-    "./assets/catani.glb",
+    "./assets/tree.glb",
     function(gltf) {
       gltf.scene.traverse(function(child) {
         if (child.isMesh) {
