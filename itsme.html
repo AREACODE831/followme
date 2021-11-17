@@ -1,31 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js - skinning - simple</title>
+		<title>three.js webgl - animation - keyframes</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		  <link rel="stylesheet" href="./style2.css" />
-			<script src="./client7.js" type="module"></script>
+		<link type="text/css" rel="stylesheet" href="style2.css">
+		<style>
+			body {
+				background-color: #F285CC;
+				color: #000;
+			}
 
+			a {
+				color: #2983ff;
+			}
+		</style>
+
+			<center>	<p class="move-mid">
+				  <a href="./">Home</a>
+				</p></center>
 	</head>
+
 	<body>
 
-		<div id="info">
-			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - simple skinning
-		</div>
+		<div id="container"></div>
 
-		<!-- <script type="module">
+		<!-- <div id="info">
+			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - animation - keyframes<br/>
+			example loader: <a href="https://www.artstation.com/artwork/1AGwX" target="_blank" rel="noopener">Littlest Tokyo</a> by
+			<a href="https://www.artstation.com/glenatron" target="_blank" rel="noopener">Glen Fox</a>, CC Attribution.
+		</div> -->
 
-			import * as THREE from '../build/three.module.js';
+		<script type="module">
+
+			import * as THREE from './build/three.module.js';
 
 			import Stats from './src/stats.module.js';
 
 			import { OrbitControls } from './src/OrbitControls.js';
-			import { GLTFLoader } from './src/loaders/GLTFLoader.js';
+			import { RoomEnvironment } from './src/RoomEnvironment.js';
+
+			import { GLTFLoader } from './src/GLTFLoader.js';
+			import { DRACOLoader } from './src/DRACOLoader.js';
+
+			let mixer;
+
+			const clock = new THREE.Clock();
+			const container = document.getElementById( 'container' );
+
+			const stats = new Stats();
+			container.appendChild( stats.dom );
+
+			const renderer = new THREE.WebGLRenderer( { antialias: true } );
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			renderer.outputEncoding = THREE.sRGBEncoding;
+			container.appendChild( renderer.domElement );
+
+			const pmremGenerator = new THREE.PMREMGenerator( renderer );
+
+			const scene = new THREE.Scene();
+			scene.background = new THREE.Color( 0xF285CC );
+			scene.environment = pmremGenerator.fromScene( new RoomEnvironment(), 0.04 ).texture;
+
+
+
+			const camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 100 );
+			camera.position.set( 50, 10, -60 );
+
+			const controls = new OrbitControls( camera, renderer.domElement );
+			controls.target.set( 0, 0.5, 0 );
+			controls.update();
+			controls.enablePan = false;
+			controls.enableDamping = true;
+
+			const dracoLoader = new DRACOLoader();
+			dracoLoader.setDecoderPath( 'src/' );
+
+			const loader = new GLTFLoader();
+			loader.setDRACOLoader( dracoLoader );
+			loader.load( './assets/bearalpha.glb', function ( gltf ) {
+
+				const model = gltf.scene;
+				model.position.set( 1, 1, 0 );
+				model.scale.set( 10, 10, 10 );
+				scene.add( model );
+
+				mixer = new THREE.AnimationMixer( model );
+				mixer.clipAction( gltf.animations[ 0 ] ).play();
+
+				animate();
+
+			}, undefined, function ( e ) {
+
+				console.error( e );
+
+			} );
+
+
+
+
+			const loader2 = new GLTFLoader();
+			loader.setDRACOLoader( dracoLoader );
+			loader.load( './assets/gather.glb', function ( gltf ) {
+
+				const model2 = gltf.scene;
+				model2.position.set( 3, 1, 0 );
+				model2.scale.set( 10, 10, 10 );
+				scene.add( model2 );
+
+				mixer = new THREE.AnimationMixer( model2 );
+				mixer.clipAction( gltf.animations[ 0 ] ).play();
+
+				animate();
+
+			}, undefined, function ( e ) {
+
+				console.error( e );
+
+			} );
+
+
+			window.onresize = function () {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			};
+
+			// // Load static model, add material, and add it to the scene
+			// const loader2 = new GLTFLoader().load(
+			// 	"./assets/bearalpha.glb",
+			// 	function(gltf) {
+			// 		// Scan loaded model for mesh and apply defined material if mesh is present
+			// 		gltf.scene.traverse(function(child) {
+			// 			if (child.isMesh) {
+			// 				child.material = newMaterial2;
+			// 			}
+			// 		});
+			// 		// set position and scale
+			// 		model2 = gltf.scene;
+			// 		model2.position.set(0, 0, 0);
+			// 		mesh2.rotation.set(0, 0, 0);
+			// 		mesh2.scale.set(100, 100, 100);
+			// 		// Add model to scene
+			// 		scene.add(mesh2);
+			//
+			// 	},
+			// 	undefined,
+			// 	function(error) {
+			// 		console.error(error);
+			// 	}
+			// );
+
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				const delta = clock.getDelta();
+
+				mixer.update( delta );
+
+				controls.update();
+
+				stats.update();
+
+				renderer.render( scene, camera );
+
 
 
 			}
+			function render() {
+			  renderer.render(scene, camera);
+			  manualAnimation();
+			}
 
-		</script> -->
+			//Manual Looping animation for mesh2
+			function manualAnimation() {
+			  if (ticker == 0) {
+			    if (model.scale.x < 2) {
+			      model.scale.x += 0.00341;
+			    }
+			    if (model.scale.x >= 2 && model.scale.y < 2) {
+			      model.scale.y += 0.00341;
+			    }
+			    if (model.scale.x >= 2 && model.scale.y >= 2 && model.scale.z < 2) {
+			      model.scale.z += 0.00341;
+			    }
+			    if (model.scale.x >= 2 && model.scale.y >= 2 && model.scale.z >= 2) {
+			      ticker = 1;
+			    }
+			  }
+			  if (ticker == 1) {
+			    if (model.scale.x >= 2 && model.scale.y >= 2 && model.scale.z > 1) {
+			      model.scale.z -= 0.00341;
+			    }
+			    if (model.scale.x >= 2 && model.scale.y > 1 && model.scale.z <= 1) {
+			      model.scale.y -= 0.00341;
+			    }
+			    if (model.scale.x > 1 && model.scale.y <= 1 && model.scale.z <= 1) {
+			      model.scale.x -= 0.00341;
+			    }
+			    if (model.scale.x <= 1 && model.scale.y <= 1 && model.scale.z <= 1) {
+			      ticker = 0;
+			    }
+			  }
+			}
+
+			// // Respond to Window Resizing
+			// window.addEventListener("resize", onWindowResize);
+
+		</script>
+
 	</body>
+
 </html>

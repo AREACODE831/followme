@@ -16,8 +16,6 @@ import { GLTFLoader } from "./src/GLTFLoader.js";
 import { FontLoader } from "./src/FontLoader.js";
 import { TextGeometry } from "./src/TextGeometry.js";
 
-
-
 const SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
 
 let SCREEN_WIDTH = window.innerWidth;
@@ -296,7 +294,7 @@ function createScene( ) {
   }
 
   const gltfLoader = new GLTFLoader();
-  gltfLoader.load( "assets/running.glb", function ( gltf ) {
+  gltfLoader.load( "../assets/hoursesize.glb", function ( gltf ) {
 
     const mesh = gltf.scene.children[ 0 ];
     const clip = gltf.animations[ 0 ];

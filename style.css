@@ -37,6 +37,7 @@ h1 {
   text-align: center;
   margin: auto;
   padding-bottom: 20px;
+  font-size: 60px;
   font-family: 'Mansalva', cursive;
 }
 
@@ -46,7 +47,7 @@ h2 {
   text-align: center;
   margin: auto;
   padding-bottom: 20px;
-  font-family: 'Mansalva', cursive;
+  font-family: font-family: 'Secular One', sans-serif;
 }
 
 p {
