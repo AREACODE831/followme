@@ -170,7 +170,9 @@
 
 				renderer.render( scene, camera );
 
-
+				model.rotation.x += 200;
+				model.rotation.y += 200;
+				// model.rotation.z += 20;
 
 			}
 			function render() {
@@ -179,37 +181,37 @@
 			}
 
 			//Manual Looping animation for mesh2
-			function manualAnimation() {
-			  if (ticker == 0) {
-			    if (model.rotation.x < 2) {
-			      model.scale.x += 0.00341;
-			    }
-			    if (model.scale.x >= 2 && model.scale.y < 2) {
-			      model.scale.y += 0.00341;
-			    }
-			    if (model.scale.x >= 2 && model.scale.y >= 2 && model.scale.z < 2) {
-			      model.scale.z += 0.00341;
-			    }
-			    if (model.scale.x >= 2 && model.scale.y >= 2 && model.scale.z >= 2) {
-			      ticker = 1;
-			    }
-			  }
-			  if (ticker == 1) {
-			    if (model.scale.x >= 2 && model.scale.y >= 2 && model.scale.z > 1) {
-			      model.scale.z -= 0.00341;
-			    }
-			    if (model.scale.x >= 2 && model.scale.y > 1 && model.scale.z <= 1) {
-			      model.scale.y -= 0.00341;
-			    }
-			    if (model.scale.x > 1 && model.scale.y <= 1 && model.scale.z <= 1) {
-			      model.scale.x -= 0.00341;
-			    }
-			    if (model.scale.x <= 1 && model.scale.y <= 1 && model.scale.z <= 1) {
-			      ticker = 0;
-			    }
-			  }
-			}
-
+			// function manualAnimation() {
+			//   if (ticker == 0) {
+			//     if (model.rotation.x < 2) {
+			//       model.rotation.x += 0.00341;
+			//     }
+			//     if (model.rotation.x >= 2 && model.rotation.y < 2) {
+			//       model.rotation.y += 0.00341;
+			//     }
+			//     if (model.rotation.x >= 2 && model.rotation.y >= 2 && model.rotation.z < 2) {
+			//       model.rotation.z += 0.00341;
+			//     }
+			//     if (model.rotation.x >= 2 && model.rotation.y >= 2 && model.rotation.z >= 2) {
+			//       ticker = 1;
+			//     }
+			//   }
+			//   if (ticker == 1) {
+			//     if (model.rotation.x >= 2 && model.rotation.y >= 2 && model.rotation.z > 1) {
+			//       model.rotation.z -= 0.00341;
+			//     }
+			//     if (model.rotation.x >= 2 && model.rotation.y > 1 && model.rotation.z <= 1) {
+			//       model.rotation.y -= 0.00341;
+			//     }
+			//     if (model.rotation.x > 1 && model.rotation.y <= 1 && model.rotation.z <= 1) {
+			//       model.rotation.x -= 0.00341;
+			//     }
+			//     if (model.rotation.x <= 1 && model.rotation.y <= 1 && model.rotation.z <= 1) {
+			//       ticker = 0;
+			//     }
+			//   }
+			// }
+animate()
 			// // Respond to Window Resizing
 			// window.addEventListener("resize", onWindowResize);
 
