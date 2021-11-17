@@ -6,7 +6,7 @@
 
 // Import required source code
 // Import three.js core
-import * as THREE from "C:\Users\shuro\Documents\GitHub\followme\client5.js";
+import * as THREE from "/build/three.module.js";
 
 // Import add-on for GLTF models
 import Stats from "./src/stats.module.js";
